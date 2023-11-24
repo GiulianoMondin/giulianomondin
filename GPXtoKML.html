@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPX to KML Converter</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+
+    <h1>GPX to KML Converter</h1>
+
+    <input type="file" id="gpxInput" accept=".gpx">
+    <button onclick="convertToKML()">Converti in KML</button>
+
+    <script>
+        function convertToKML() {
+            const gpxFile = $('#gpxInput')[0].files[0];
+
+            if (gpxFile) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const gpxData = e.target.result;
+                    const kmlData = parseGPXToKML(gpxData);
+
+                    // Salvare il file KML utilizzando FileSaver.js
+                    const blob = new Blob([kmlData], { type: 'application/xml' });
+                    saveAs(blob, 'output.kml');
+                };
+
+                reader.readAsText(gpxFile);
+            } else {
+                alert('Seleziona un file GPX prima di convertire.');
+            }
+        }
+
+        function parseGPXToKML(gpxData) {
+            const xmlDoc = $.parseXML(gpxData);
+            const $xml = $(xmlDoc);
+
+            const kmlCoordinates = [];
+            $xml.find('rtept').each(function() {
+                const lat = $(this).attr('lat');
+                const lon = $(this).attr('lon');
+                kmlCoordinates.push(lon + ',' + lat);
+            });
+
+            const kmlTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+                <kml xmlns="http://www.opengis.net/kml/2.2">
+                    <Placemark>
+                        <name>Segnaposto</name>
+                        <Point>
+                            <coordinates>${kmlCoordinates.join(' ')}</coordinates>
+                        </Point>
+                    </Placemark>
+                </kml>`;
+
+            return kmlTemplate;
+        }
+    </script>
+
+</body>
+</html>
